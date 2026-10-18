@@ -1,0 +1,16 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+.fake
+*.fs.jsx
+*.fs.js
+.idea
+/ScratchTests/
+# docs output (fsdocs / nacara)
+/output/
+/.fsdocs/
+/tmp/
+/docs/output/
+/.superpowers/

@@ -1,0 +1,23 @@
+<Project>
+
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <RepositoryUrl>https://github.com/shayanhabibi/Ranvier.Examples</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Authors>shayanhabibi</Authors>
+        <IsPackable>false</IsPackable>
+        <NoWarn Condition="'$(MSBuildProjectExtension)' == '.csproj'">$(NoWarn);1591</NoWarn>
+    </PropertyGroup>
+
+
+    <!--
+    Projects opting out of the root build set IsExcludedFromRootBuild, which
+    Directory.Build.targets turns into a no-op Build. Used for Fable projects,
+    which are compiled by the fable tool rather than by MSBuild.
+    -->
+    <PropertyGroup Condition="'$(IsExcludedFromRootBuild)' == 'true'">
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+</Project>

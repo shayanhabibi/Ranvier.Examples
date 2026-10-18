@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><Compile Include="Order.fs" /></ItemGroup><ItemGroup><ProjectReference Include="../../external/Ranvier/src/Ranvier/Ranvier.fsproj" /></ItemGroup></Project>

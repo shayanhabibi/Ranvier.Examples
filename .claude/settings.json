@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__fslangmcp",
+      "mcp__sagefs"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "fslangmcp",
+    "sagefs"
+  ],
+  "enabledPlugins": {
+    "comment-hygiene@roboz0r": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "fslangmcp": {
+      "type": "stdio",
+      "command": "fslangmcp",
+      "args": ["--project", "Ranvier.Examples.slnx"],
+      "env": {}
+    },
+    "sagefs": {
+      "type": "stdio",
+      "command": "sagefs",
+      "args": ["mcp"],
+      "env": {}
+    }
+  }
+}
