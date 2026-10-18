@@ -13,16 +13,20 @@ public sealed class OrderModelTests
         check(graph, order);
     }
 
-    [Fact] public void DefaultOrderCosts50() => WithOrder((_, o) =>
+    [Fact]
+    public void DefaultOrderCosts50() => WithOrder((_, o) =>
     {
         Assert.Equal(50m, o.Total.Value);
         Assert.True(o.CanSubmit.Value);
     });
 
     [Theory]
-    [InlineData("Quantity", "0")] [InlineData("Quantity", "1001")]
-    [InlineData("UnitPrice", "0")] [InlineData("UnitPrice", "10000.01")]
-    [InlineData("DiscountPercent", "-1")] [InlineData("DiscountPercent", "50.01")]
+    [InlineData("Quantity", "0")]
+    [InlineData("Quantity", "1001")]
+    [InlineData("UnitPrice", "0")]
+    [InlineData("UnitPrice", "10000.01")]
+    [InlineData("DiscountPercent", "-1")]
+    [InlineData("DiscountPercent", "50.01")]
     public void InvalidFieldsPreventSubmission(string field, string text) => WithOrder((_, o) =>
     {
         decimal value = decimal.Parse(text, System.Globalization.CultureInfo.InvariantCulture);
@@ -35,7 +39,9 @@ public sealed class OrderModelTests
         Assert.False(o.Submit());
     });
 
-    [Theory] [InlineData(1, "0.01", "0")] [InlineData(1000, "10000", "50")]
+    [Theory]
+    [InlineData(1, "0.01", "0")]
+    [InlineData(1000, "10000", "50")]
     public void InclusiveLimitsAreValid(int quantity, string price, string discount) => WithOrder((_, o) =>
     {
         o.Quantity.Value = quantity;
@@ -59,7 +65,8 @@ public sealed class OrderModelTests
         Assert.Equal(decimal.Parse(expected, System.Globalization.CultureInfo.InvariantCulture), o.Total.Value);
     });
 
-    [Fact] public void AddressValidationTracksDeliveryBranch() => WithOrder((_, o) =>
+    [Fact]
+    public void AddressValidationTracksDeliveryBranch() => WithOrder((_, o) =>
     {
         int calls = 0;
         using var observer = Ranvier.CSharp.Reactive.Root(owner =>
@@ -79,7 +86,8 @@ public sealed class OrderModelTests
         Assert.True(o.CanSubmit.Value);
     });
 
-    [Fact] public void ResetPublishesOneCoherentSummary() => WithOrder((_, o) =>
+    [Fact]
+    public void ResetPublishesOneCoherentSummary() => WithOrder((_, o) =>
     {
         o.Quantity.Value = 3; o.DiscountPercent.Value = 10;
         o.Delivery.Value = true; o.Address.Value = "42 Example Street";
@@ -92,7 +100,8 @@ public sealed class OrderModelTests
         Assert.Equal(o.Summary.Value, seen[^1]);
     });
 
-    [Fact] public void SubmissionCapturesSnapshotAndInvalidSubmissionPreservesIt() => WithOrder((_, o) =>
+    [Fact]
+    public void SubmissionCapturesSnapshotAndInvalidSubmissionPreservesIt() => WithOrder((_, o) =>
     {
         Assert.True(o.Submit());
         var accepted = o.Confirmation.Value;
@@ -106,7 +115,8 @@ public sealed class OrderModelTests
         Assert.Null(o.Confirmation.Value);
     });
 
-    [Fact] public void DisposingObserversAndModelLeavesGraphUsable() => WithOrder((_, o) =>
+    [Fact]
+    public void DisposingObserversAndModelLeavesGraphUsable() => WithOrder((_, o) =>
     {
         var unrelated = Ranvier.CSharp.Reactive.Signal(1);
         int calls = 0;

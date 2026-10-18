@@ -14,9 +14,17 @@
   <Folder Name="/src/">
     <Project Path="src/Ranvier.Examples.FSharp/Ranvier.Examples.FSharp.fsproj" />
     <Project Path="src/Ranvier.Examples.CSharp/Ranvier.Examples.CSharp.csproj" />
+    <Project Path="src/Ranvier.Examples.FSharp.Console/Ranvier.Examples.FSharp.Console.fsproj" />
+    <Project Path="src/Ranvier.Examples.CSharp.Console/Ranvier.Examples.CSharp.Console.csproj" />
+    <Project Path="src/Ranvier.Examples.FSharp.Desktop/Ranvier.Examples.FSharp.Desktop.fsproj" />
+    <Project Path="src/Ranvier.Examples.CSharp.Desktop/Ranvier.Examples.CSharp.Desktop.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Ranvier.Examples.FSharp.Tests/Ranvier.Examples.FSharp.Tests.fsproj" />
     <Project Path="tests/Ranvier.Examples.CSharp.Tests/Ranvier.Examples.CSharp.Tests.csproj" />
+  </Folder>
+  <Folder Name="/external/">
+    <Project Path="external/Ranvier/src/Ranvier/Ranvier.fsproj" />
+    <Project Path="external/Ranvier/src/Ranvier.CSharp/Ranvier.CSharp.fsproj" />
   </Folder>
 </Solution>

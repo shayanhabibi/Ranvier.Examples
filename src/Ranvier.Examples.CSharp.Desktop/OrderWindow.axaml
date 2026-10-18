@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Ranvier.Examples.CSharp.Desktop.OrderWindow"
+        Title="Ranvier · C# order editor" Width="760" Height="800" MinWidth="620" MinHeight="650" Background="#F3F5F7">
+  <ScrollViewer>
+    <StackPanel Margin="36" Spacing="18">
+      <TextBlock Text="RANVIER EXAMPLES / C#" FontSize="12" FontWeight="SemiBold" Foreground="#536274" LetterSpacing="2" />
+      <TextBlock Text="Build an order." FontSize="34" FontWeight="Bold" />
+      <TextBlock Text="Edit the inputs. Ranvier keeps prices, validation and commands in sync." TextWrapping="Wrap" Foreground="#536274" />
+      <Border Background="White" CornerRadius="12" Padding="24">
+        <StackPanel Spacing="12">
+          <Grid ColumnDefinitions="*,*" ColumnSpacing="18">
+            <StackPanel Spacing="6"><TextBlock Text="Quantity · 1–1000" /><NumericUpDown Name="QuantityInput" Value="{Binding Quantity, Mode=TwoWay}" FormatString="0" Increment="1" /></StackPanel>
+            <StackPanel Grid.Column="1" Spacing="6"><TextBlock Text="Unit price · 0.01–10000" /><NumericUpDown Name="PriceInput" Value="{Binding UnitPrice, Mode=TwoWay}" FormatString="0.00" Increment="1" /></StackPanel>
+          </Grid>
+          <TextBlock Text="Discount · 0–50%" />
+          <NumericUpDown Name="DiscountInput" Value="{Binding DiscountPercent, Mode=TwoWay}" FormatString="0.##" Increment="1" />
+          <CheckBox Name="DeliveryInput" Content="Deliver this order (otherwise pickup)" IsChecked="{Binding Delivery, Mode=TwoWay}" />
+          <TextBox Name="AddressInput" PlaceholderText="Delivery address" Text="{Binding Address, Mode=TwoWay}" IsEnabled="{Binding Delivery}" />
+          <TextBlock Name="ErrorsText" Text="{Binding Errors}" Foreground="#B42318" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+      <Border Background="#122D35" CornerRadius="12" Padding="24">
+        <StackPanel Spacing="10">
+          <TextBlock Text="PAYABLE TOTAL · DEMO CURRENCY" Foreground="#ADC8CB" FontSize="12" />
+          <TextBlock Name="TotalText" Text="{Binding TotalText}" Foreground="White" FontSize="38" FontWeight="Bold" />
+          <TextBlock Text="{Binding Breakdown}" Foreground="#D1E2E4" TextWrapping="Wrap" />
+          <TextBlock Text="Delivery 7.50 · free from 100 after discount" Foreground="#ADC8CB" FontSize="12" />
+        </StackPanel>
+      </Border>
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Button Name="SubmitButton" Content="Submit order" Command="{Binding Submit}" Padding="22,12" />
+        <Button Name="ResetButton" Content="Reset inputs" Command="{Binding Reset}" Padding="22,12" />
+      </StackPanel>
+      <TextBlock Name="ConfirmationText" Text="{Binding Confirmation}" TextWrapping="Wrap" />
+      <TextBlock Text="In-memory demonstration · no payment is taken. Reset applies all defaults in one batch." FontSize="12" Foreground="#536274" TextWrapping="Wrap" />
+    </StackPanel>
+  </ScrollViewer>
+</Window>

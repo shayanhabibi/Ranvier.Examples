@@ -10,36 +10,37 @@ open Fake.IO
 open Str
 
 [<Literal>]
-let __REPOSITORY_DIRECTORY__ =
-    __SOURCE_DIRECTORY__
+let __REPOSITORY_DIRECTORY__ = __SOURCE_DIRECTORY__
 
-type Repo = BuildHelperProvider<
-    __REPOSITORY_DIRECTORY__,
-    "bin/",
-    capabilityFullOverride = true
->
+type Repo = BuildHelperProvider<__REPOSITORY_DIRECTORY__, "bin/", capabilityFullOverride=true>
 
 let inline funApply value fn = fn value
 
 module Spec =
     let formattingSourceFiles =
-        !! "src/**/*.fs"
-        ++ "tests/**/*.fs"
-        ++ "build.fsx"
+        !!"src/**/*.fs" ++ "tests/**/*.fs" ++ "build.fsx"
         -- "**/obj/**/*.*"
         -- "**/AssemblyInfo.fs"
         -- "**/fable-modules/**/*.*"
 
-    let projects = Repo.Project.AllProjects()
-    let sourceProjects = projects |> List.filter _.RelativePath.StartsWith("src")
-    let testProjects = projects |> List.filter _.RelativePath.StartsWith("tests")
+    let projects = Repo.Project.AllProjects ()
+
+    let formattingCSharpFiles =
+        !!"src/**/*.cs" ++ "tests/**/*.cs"
+        -- "**/obj/**/*.*"
+        -- "**/bin/**/*.*"
+
+    let sourceProjects =
+        projects
+        |> List.filter _.RelativePath.StartsWith("src")
+
+    let testProjects =
+        projects
+        |> List.filter _.RelativePath.StartsWith("tests")
+
     let sourceProjectsMap =
         sourceProjects
-        |> List.map (
-            _.Name
-            >> Str.replaceChar '.' '-'
-            >> Str.toLower
-            )
+        |> List.map (_.Name >> Str.replaceChar '.' '-' >> Str.toLower)
         |> List.zip
         |> funApply sourceProjects
         |> Map.ofList
@@ -49,6 +50,7 @@ module Options =
         Baked.Input.DotNet.configString
         |> InputSpec.ofInput
         |> InputSpec.map (Option.defaultValue "Release")
+
     let quick =
         Input.option<bool> "--quick"
         |> Input.alias "-q"
@@ -73,86 +75,116 @@ module Options =
 
 
 
-
 module Stage =
-    let restore = input {
-        let! quick = Options.quick
-        return stage "restore" {
-            quiet
-            workingDir Repo.FileSystem.``.``
-            when' (not quick)
-            parallel'
-            stage "restore solution" {
-                run $"dotnet restore {Repo.Project.SolutionFile} -v q"
-            }
-            stage "restore tools" {
-                run "dotnet tool restore -v q"
-            }
+    let restore =
+        input {
+            let! quick = Options.quick
+
+            return
+                stage "restore" {
+                    quiet
+                    workingDir Repo.FileSystem.``.``
+                    when' (not quick)
+                    parallel'
+                    stage "restore solution" { run $"dotnet restore {Repo.Project.SolutionFile} -v q" }
+                    stage "restore tools" { run "dotnet tool restore -v q" }
+                }
         }
-    }
 
-    let clean = input {
-        let! quick = Options.quick
-        return stage "clean" {
-            when' (not quick)
-            run (async {
-                !! "src/**/bin"
-                ++ "tests/**/bin"
-                |> Shell.cleanDirs
-            })
+    let clean =
+        input {
+            let! quick = Options.quick
+
+            return
+                stage "clean" {
+                    when' (not quick)
+
+                    run (
+                        async {
+                            !!"src/**/bin" ++ "tests/**/bin"
+                            |> Shell.cleanDirs
+                        }
+                    )
+                }
         }
-    }
 
 
-    let format (formatInput: InputSpec<bool>) (dryRun: InputSpec<bool>) = input {
-        let! format = formatInput
-        and! dryRun = dryRun
-        let commandString =
-            Spec.formattingSourceFiles
-            |> Seq.map (sprintf "\"%s\"")
-            |> String.concat " "
-            |> if dryRun
-                then sprintf "dotnet fantomas %s --check"
-                else sprintf "dotnet fantomas %s"
-        return stage "format" {
-            when' (format || dryRun)
-            quiet
-            run commandString
+    let format (formatInput: InputSpec<bool>) (dryRun: InputSpec<bool>) =
+        input {
+            let! format = formatInput
+            and! dryRun = dryRun
+
+            let commandString =
+                Spec.formattingSourceFiles
+                |> Seq.map (sprintf "\"%s\"")
+                |> String.concat " "
+                |> if dryRun then
+                       sprintf "dotnet fantomas %s --check"
+                   else
+                       sprintf "dotnet fantomas %s"
+
+            return
+                stage "format" {
+                    when' (format || dryRun)
+                    quiet
+                    run commandString
+
+                    run (
+                        "dotnet format whitespace --folder --include "
+                        + (Spec.formattingCSharpFiles
+                           |> Seq.map (sprintf "\"%s\"")
+                           |> String.concat " ")
+                        + if dryRun then " --verify-no-changes" else ""
+                    )
+                }
         }
-    }
 
-    let build = input {
-        let! config = Options.config
-        return stage "build" {
-            quiet
-            run (cmd $"dotnet build Ranvier.Examples.slnx -c {config} -v q")
+    let build =
+        input {
+            let! config = Options.config
+
+            return
+                stage "build" {
+                    quiet
+                    run (cmd $"dotnet build Ranvier.Examples.slnx -c {config} -v q")
+                }
         }
-    }
 
 
 
-    let runTests = input {
-        let! config = Options.config
-        and! skipTests = Options.skipTests
-        return stage "run tests" {
-            quiet
-            when' (not skipTests)
-            for { Name = name; Path = path } in Spec.testProjects do
-            stage $"run {name}" {
-                run (cmd $"dotnet test {path} -c {config} -v q")
-            }
+    let runTests =
+        input {
+            let! config = Options.config
+            and! skipTests = Options.skipTests
+
+            return
+                stage "run tests" {
+                    quiet
+                    when' (not skipTests)
+
+                    for { Name = name; Path = path } in Spec.testProjects do
+                        stage $"run {name}" { run (cmd $"dotnet test {path} -c {config} -v q") }
+                }
         }
-    }
 
-exit <| rootCommandOfScript {
+    let runExample project =
+        input {
+            let! config = Options.config
+            return stage "run example" { run (cmd $"dotnet run --project {project} -c {config}") }
+        }
+
+exit
+<| rootCommandOfScript {
     name "build.fsx"
     description "Build CLI"
     workingDir __REPOSITORY_DIRECTORY__
+
     command "build" {
         description "Builds the solution"
         Stage.restore
         Stage.build
     }
+
     command "test" {
         alias "tests"
         description "Runs the test suite"
@@ -160,10 +192,31 @@ exit <| rootCommandOfScript {
         Stage.format (InputSpec.ofInput Options.format) (InputSpec.ofInput Options.dryFormat)
         Stage.runTests
     }
+
     command "format" {
         alias "apply-style"
         description "Formats the source files"
         Stage.restore
         Stage.format (InputSpec.ret true) (InputSpec.ofInput Options.dryFormat)
+    }
+
+    command "run-fsharp-console" {
+        description "Runs the F# core workflow"
+        Stage.runExample "src/Ranvier.Examples.FSharp.Console"
+    }
+
+    command "run-csharp-console" {
+        description "Runs the C# core workflow"
+        Stage.runExample "src/Ranvier.Examples.CSharp.Console"
+    }
+
+    command "run-fsharp-desktop" {
+        description "Runs the F# Avalonia editor"
+        Stage.runExample "src/Ranvier.Examples.FSharp.Desktop"
+    }
+
+    command "run-csharp-desktop" {
+        description "Runs the C# Avalonia editor"
+        Stage.runExample "src/Ranvier.Examples.CSharp.Desktop"
     }
 }
