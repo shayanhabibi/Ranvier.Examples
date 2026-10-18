@@ -1,0 +1,4 @@
+* text=auto
+*.fs text eol=crlf
+*.fsx text eol=crlf
+*.cs text eol=crlf
