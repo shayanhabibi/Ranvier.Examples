@@ -29,6 +29,29 @@ public static class TestAppBuilder
 public sealed class DesktopTests
 {
     [AvaloniaTheory]
+    [InlineData(false, "PriceInput")]
+    [InlineData(true, "PriceInput")]
+    [InlineData(false, "DiscountInput")]
+    [InlineData(true, "DiscountInput")]
+    public void ExtremeNumbersInvalidateObservedBreakdownSafely(bool fsharp, string field)
+    {
+        Window window = fsharp ? new global::Ranvier.Examples.FSharp.Desktop.OrderWindow()
+            : new Desktop.OrderWindow();
+        try
+        {
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+            Control<NumericUpDown>(window, field).Value = decimal.MaxValue;
+            Dispatcher.UIThread.RunJobs();
+            Assert.False(Control<Button>(window, "SubmitButton").IsEffectivelyEnabled);
+            Assert.Equal("Unavailable", Control<TextBlock>(window, "TotalText").Text);
+            Click(window, Control<Button>(window, "ResetButton"));
+            Assert.Equal("50.00", Control<TextBlock>(window, "TotalText").Text);
+        }
+        finally { window.Close(); Dispatcher.UIThread.RunJobs(); }
+    }
+
+    [AvaloniaTheory]
     [InlineData(false, "QuantityInput")]
     [InlineData(true, "QuantityInput")]
     [InlineData(false, "PriceInput")]
@@ -87,7 +110,7 @@ public sealed class DesktopTests
             {
                 Assert.NotNull(frame);
                 Assert.True(frame.PixelSize.Width > 0);
-                frame.Save(Path.Combine(AppContext.BaseDirectory, fsharp ? "order-fsharp.png" : "order-csharp.png"));
+                frame.Save(Path.Combine(AppContext.BaseDirectory, fsharp ? "order-fsharp.png" : "order-csharp.png"), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
             }
             quantity.Value = 3; discount.Value = 10;
             Dispatcher.UIThread.RunJobs();

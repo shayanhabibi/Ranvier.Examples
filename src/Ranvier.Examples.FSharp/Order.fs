@@ -62,10 +62,23 @@ type OrderModel(graph: Graph) =
                           | Some message -> "Address", message
                           | None -> () ])
 
-                let subtotal = createMemo (fun _ -> decimal quantity.Value * price.Value)
+                let subtotal =
+                    createMemo (fun _ ->
+                        let q, p = quantity.Value, price.Value
+
+                        if q >= 1 && q <= 1000 && p >= 0.01m && p <= 10000m then
+                            decimal q * p
+                        else
+                            0m)
 
                 let discount =
-                    createMemo (fun _ -> Decimal.Round (subtotal.Value * percent.Value / 100m, 2, MidpointRounding.AwayFromZero))
+                    createMemo (fun _ ->
+                        let d = percent.Value
+
+                        if d >= 0m && d <= 50m then
+                            Decimal.Round (subtotal.Value * d / 100m, 2, MidpointRounding.AwayFromZero)
+                        else
+                            0m)
 
                 let deliveryCost =
                     createMemo (fun _ ->
@@ -137,9 +150,9 @@ type OrderModel(graph: Graph) =
     member _.AddressError = addressError
     /// <summary>Field names and validation messages for the current inputs.</summary>
     member _.Errors = errors
-    /// <summary>Quantity multiplied by unit price before validation.</summary>
+    /// <summary>Quantity multiplied by unit price, or zero when either numeric input is invalid.</summary>
     member _.Subtotal = subtotal
-    /// <summary>Discount rounded to two places with midpoint values rounded away from zero.</summary>
+    /// <summary>Discount rounded away from zero to two places, or zero when its numeric inputs are invalid.</summary>
     member _.Discount = discount
     /// <summary>Delivery charge before validation; discounted orders of at least 100 ship free.</summary>
     member _.DeliveryCost = deliveryCost

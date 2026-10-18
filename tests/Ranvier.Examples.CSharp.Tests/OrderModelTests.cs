@@ -5,6 +5,19 @@ namespace Ranvier.Examples.CSharp.Tests;
 
 public sealed class OrderModelTests
 {
+    [Fact]
+    public void InvalidExtremeNumbersKeepBreakdownReadable() => WithOrder((_, o) =>
+    {
+        o.UnitPrice.Value = decimal.MaxValue;
+        Assert.Null(o.Total.Value);
+        Assert.Equal(0m, o.Subtotal.Value);
+        Assert.Equal(0m, o.Discount.Value);
+        o.Reset();
+        o.DiscountPercent.Value = decimal.MaxValue;
+        Assert.Null(o.Total.Value);
+        Assert.Equal(50m, o.Subtotal.Value);
+        Assert.Equal(0m, o.Discount.Value);
+    });
     private static void WithOrder(Action<Graph, OrderModel> check)
     {
         using var graph = new Graph();

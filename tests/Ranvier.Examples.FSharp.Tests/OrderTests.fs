@@ -15,7 +15,20 @@ let private withOrder f =
 let tests =
     testList
         "F# order"
-        [ testCase "default order costs 50"
+        [ testCase "invalid extreme numbers keep breakdown readable"
+          <| fun _ ->
+              withOrder
+              <| fun _ order ->
+                  order.UnitPrice.Value <- Decimal.MaxValue
+                  Expect.equal order.Total.Value None "invalid price"
+                  Expect.equal order.Subtotal.Value 0m "safe subtotal"
+                  Expect.equal order.Discount.Value 0m "safe discount"
+                  order.Reset ()
+                  order.DiscountPercent.Value <- Decimal.MaxValue
+                  Expect.equal order.Total.Value None "invalid discount"
+                  Expect.equal order.Subtotal.Value 50m "valid subtotal"
+                  Expect.equal order.Discount.Value 0m "safe invalid discount"
+          testCase "default order costs 50"
           <| fun _ ->
               withOrder
               <| fun _ order ->

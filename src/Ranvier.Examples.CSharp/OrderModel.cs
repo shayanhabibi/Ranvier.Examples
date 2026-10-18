@@ -45,8 +45,10 @@ public sealed class OrderModel : IDisposable
                 if (AddressError.Value is { } error) errors.Add(new("Address", error));
                 return errors.AsReadOnly();
             });
-            Subtotal = Memo(() => Quantity.Value * UnitPrice.Value);
-            Discount = Memo(() => decimal.Round(Subtotal.Value * DiscountPercent.Value / 100m, 2, MidpointRounding.AwayFromZero));
+            Subtotal = Memo(() => Quantity.Value is >= 1 and <= 1000 && UnitPrice.Value is >= 0.01m and <= 10000m
+                ? Quantity.Value * UnitPrice.Value : 0m);
+            Discount = Memo(() => DiscountPercent.Value is >= 0m and <= 50m
+                ? decimal.Round(Subtotal.Value * DiscountPercent.Value / 100m, 2, MidpointRounding.AwayFromZero) : 0m);
             DeliveryCost = Memo(() => Delivery.Value && Subtotal.Value - Discount.Value < 100m ? 7.50m : 0m);
             CanSubmit = Memo(() => Errors.Value.Count == 0);
             Total = Memo<decimal?>(() => CanSubmit.Value ? Subtotal.Value - Discount.Value + DeliveryCost.Value : null);
@@ -73,9 +75,9 @@ public sealed class OrderModel : IDisposable
     public Memo<string?> AddressError { get; private set; } = null!;
     /// <summary>Current field validation messages.</summary>
     public Memo<IReadOnlyList<FieldError>> Errors { get; private set; } = null!;
-    /// <summary>Quantity multiplied by unit price before validation.</summary>
+    /// <summary>Quantity multiplied by unit price, or zero when either numeric input is invalid.</summary>
     public Memo<decimal> Subtotal { get; private set; } = null!;
-    /// <summary>Discount rounded to two decimal places away from zero.</summary>
+    /// <summary>Discount rounded away from zero to two places, or zero when its numeric inputs are invalid.</summary>
     public Memo<decimal> Discount { get; private set; } = null!;
     /// <summary>Delivery charge before validation; discounted subtotals of at least 100 ship free.</summary>
     public Memo<decimal> DeliveryCost { get; private set; } = null!;

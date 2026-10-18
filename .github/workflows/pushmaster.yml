@@ -1,26 +1,40 @@
-name: workflow.yml
+name: Verify examples
 on:
   workflow_dispatch:
+  pull_request:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
 
-env:
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+permissions:
+  contents: read
 
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  publish:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
-      - name: Run Script
-        run: dotnet fsi build.fsx -- publish --nuget-key ${{ secrets.NUGET_KEY }}
+          submodules: recursive
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Restore tools
+        run: dotnet tool restore
+      - name: Check formatting
+        run: dotnet fsi build.fsx -- format --dry-format
+      - name: Build all applications
+        run: dotnet fsi build.fsx -- build --quick
+      - name: Test models, bindings and desktop windows
+        run: dotnet fsi build.fsx -- test --quick
+      - name: Run both console scenarios
+        run: |
+          dotnet fsi build.fsx -- run-fsharp-console
+          dotnet fsi build.fsx -- run-csharp-console
+      - name: Verify dependency sources are unchanged
+        run: |
+          test -z "$(git -C external/Ranvier status --porcelain)"
+          git submodule status

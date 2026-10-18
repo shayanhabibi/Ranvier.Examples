@@ -75,16 +75,25 @@ type OrderWindow() as this =
         let body = panel 18.0
         body.Margin <- Thickness 36.0
         body.Children.Add (text "RANVIER EXAMPLES / F#" 12.0 "#536274")
-        body.Children.Add (text "Build an order." 34.0 "#122D35")
+        let heading = text "Build an order." 34.0 "#122D35"
+        heading.FontWeight <- FontWeight.Bold
+        body.Children.Add heading
         body.Children.Add (text "Edit the inputs. Ranvier keeps prices, validation and controls in sync." 14.0 "#536274")
         let inputs = panel 12.0
 
-        for label, control in
-            [ "Quantity · 1–1000", quantity
-              "Unit price · 0.01–10000", price
-              "Discount · 0–50%", discount ] do
-            inputs.Children.Add (text label 14.0 "#122D35")
-            inputs.Children.Add control
+        let amounts =
+            Grid (ColumnDefinitions = ColumnDefinitions ("*,*"), ColumnSpacing = 18.0)
+
+        for index, label, control in [ 0, "Quantity · 1–1000", quantity; 1, "Unit price · 0.01–10000", price ] do
+            let column = panel 6.0
+            column.Children.Add (text label 14.0 "#122D35")
+            column.Children.Add control
+            Grid.SetColumn (column, index)
+            amounts.Children.Add column
+
+        inputs.Children.Add amounts
+        inputs.Children.Add (text "Discount · 0–50%" 14.0 "#122D35")
+        inputs.Children.Add discount
 
         inputs.Children.Add delivery
         inputs.Children.Add address
