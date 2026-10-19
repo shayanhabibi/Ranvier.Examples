@@ -5,6 +5,7 @@
     <ItemGroup>
         <Compile Include="Order.fs" />
         <Compile Include="SupportDesk.fs" />
+        <Compile Include="DataQuality.fs" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="../../external/Ranvier/src/Ranvier/Ranvier.fsproj" />
