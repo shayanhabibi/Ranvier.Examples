@@ -9,7 +9,7 @@ using Ranvier.Examples.FSharp;
 
 namespace Ranvier.Examples.Workflows.Desktop;
 
-/// <summary>Three real workflow cores hosted on one UI-thread graph with explicit shutdown.</summary>
+/// <summary>Real workflow cores hosted on one UI-thread graph with explicit shutdown.</summary>
 public sealed class WorkflowWindow : Window
 {
     private readonly Graph graph;
@@ -17,6 +17,7 @@ public sealed class WorkflowWindow : Window
     private readonly TaskCompletionSource stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly DataQualityModel dataModel;
     private readonly FileJobMonitor jobModel;
+    private readonly ExpenseReview expenseModel;
     private SupportApi? api;
     private TicketHttpClient? http;
     private SupportDesk? supportModel;
@@ -26,6 +27,7 @@ public sealed class WorkflowWindow : Window
     public SupportView Support { get; private set; } = null!;
     public JobsView Jobs { get; }
     public DataQualityView Data { get; }
+    public ExpenseReviewView Expenses { get; }
     public Task Ready => ready.Task;
     public Task Stopped => stopped.Task;
 
@@ -40,6 +42,12 @@ public sealed class WorkflowWindow : Window
         using var active = graph.Activate();
         jobModel = new FileJobMonitor(graph, 2);
         dataModel = new DataQualityModel(graph, ReadCalibrationAsync);
+        string expenseInput = Path.Combine(DataDirectory, "expense-claims.json");
+        string expenseOutput = Path.Combine(DataDirectory, "expense-decisions.json");
+        if (!File.Exists(expenseInput)) File.Copy(Path.Combine(AppContext.BaseDirectory, "samples", "expenses.json"), expenseInput);
+        expenseModel = new ExpenseReview(graph, token => ExpenseFiles.LoadAsync(expenseInput, token),
+            (rows, token) => ExpenseFiles.SaveAsync(expenseOutput, rows, token));
+        Expenses = new ExpenseReviewView(graph, expenseModel, expenseInput, expenseOutput);
         string sample = Path.Combine(AppContext.BaseDirectory, "samples", "measurements.csv");
         string local = Path.Combine(DataDirectory, "measurements.csv");
         if (!File.Exists(local)) File.Copy(sample, local);
@@ -50,7 +58,8 @@ public sealed class WorkflowWindow : Window
             ItemsSource = new[] {
                 new TabItem { Header = "Support workbench", Content = Ui.Text("Starting the local ticket service...") },
                 new TabItem { Header = "File processing", Content = Jobs },
-                new TabItem { Header = "Data quality", Content = Data }
+                new TabItem { Header = "Data quality", Content = Data },
+                new TabItem { Header = "Expense review / Elmish", Content = Expenses }
             }
         };
         var header = Ui.Stack(
@@ -88,7 +97,8 @@ public sealed class WorkflowWindow : Window
             supportModel = new SupportDesk(graph, http);
             Support = new SupportView(graph, supportModel, api, ApplyExternalUpdateAsync);
             ((TabItem[])Tabs.ItemsSource!)[0].Content = Support;
-            await Task.WhenAll(supportModel.SearchAsync(""), dataModel.LoadAsync(local));
+            expenseModel.Load();
+            await Task.WhenAll(supportModel.SearchAsync(""), dataModel.LoadAsync(local), expenseModel.Completion);
             ready.TrySetResult();
         }
         catch (Exception error)
@@ -114,9 +124,9 @@ public sealed class WorkflowWindow : Window
         closed = true;
         try
         {
-            Support?.Dispose(); Jobs.Dispose(); Data.Dispose();
-            supportModel?.Dispose(); dataModel.Dispose(); jobModel.Dispose();
-            await jobModel.Completion;
+            Support?.Dispose(); Jobs.Dispose(); Data.Dispose(); Expenses.Dispose();
+            supportModel?.Dispose(); dataModel.Dispose(); jobModel.Dispose(); expenseModel.Dispose();
+            await Task.WhenAll(jobModel.Completion, expenseModel.Completion);
             http?.Dispose();
             if (api is not null) await api.DisposeAsync();
             graph.Dispose();

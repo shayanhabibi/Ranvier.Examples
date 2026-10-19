@@ -1,6 +1,6 @@
 # Reactive features and ownership
 
-The examples deliberately spread useful patterns across three complementary cores.
+The examples deliberately spread useful patterns across complementary cores.
 
 - **Signals and memoized derivations:** editable inputs, command availability, selected details, validation and summaries in all workflows.
 - **Dynamic dependencies:** selected row/ticket and per-row validation subscribe to current inputs.
@@ -15,5 +15,6 @@ The examples deliberately spread useful patterns across three complementary core
 - **Graph dispatch:** worker and file-import results return to the owning graph thread; console runners explicitly pump it.
 - **Bindings and commands:** the shared desktop host uses ReactiveBindings, tracked command eligibility and displayed command errors.
 - **Owners and cleanup:** an editor owns its detail lease; the support session owns saves. Measurement rows own independent reactive roots. The workbench disposes views/models, cancels workers, awaits completion, stops HTTP and finally disposes its graph.
+- **Elmish bridge:** expense review uses Mvu.withCmd, a pure immutable update function, decision history, revision-aware asynchronous commands and nested selectors. Its tests verify unchanged totals do not notify readers during navigation.
 
 These are executable examples of core and UI behavior, not implementations of every Ranvier API. The original F#/C# order examples remain a smaller entry point for conditional dependencies, batches, bindings and effects.

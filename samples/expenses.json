@@ -1,0 +1,5 @@
+[
+  { "id": 1, "employee": "Ada", "purpose": "Client workshop train", "amount": 86, "hasReceipt": true },
+  { "id": 2, "employee": "Grace", "purpose": "Team lunch", "amount": 54, "hasReceipt": false },
+  { "id": 3, "employee": "Linus", "purpose": "Replacement adapter", "amount": 32, "hasReceipt": true }
+]

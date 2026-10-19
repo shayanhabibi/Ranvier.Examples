@@ -6,10 +6,12 @@
         <Compile Include="Order.fs" />
         <Compile Include="SupportDesk.fs" />
         <Compile Include="DataQuality.fs" />
+        <Compile Include="ExpenseReview.fs" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="../../external/Ranvier/src/Ranvier/Ranvier.fsproj" />
         <ProjectReference Include="../../external/Ranvier/src/Ranvier.Query/Ranvier.Query.fsproj" />
+        <ProjectReference Include="../../external/Ranvier/src/Ranvier.Elmish/Ranvier.Elmish.fsproj" />
         <ProjectReference Include="../Ranvier.Examples.CSharp/Ranvier.Examples.CSharp.csproj" />
     </ItemGroup>
 </Project>

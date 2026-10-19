@@ -30,11 +30,12 @@ jobs:
         run: dotnet fsi build.fsx -- build --quick
       - name: Test models, bindings and desktop windows
         run: dotnet fsi build.fsx -- test --quick
-      - name: Run both console scenarios
+      - name: Run console scenarios
         run: |
           dotnet fsi build.fsx -- run-fsharp-console
           dotnet fsi build.fsx -- run-csharp-console
           dotnet fsi build.fsx -- run-data-console
+          dotnet fsi build.fsx -- run-elmish-console
           dotnet run --no-build -c Release --project src/Ranvier.Examples.FSharp.Console -- intro
           dotnet run --no-build -c Release --project src/Ranvier.Examples.CSharp.Console -- intro
       - name: Verify dependency sources are unchanged

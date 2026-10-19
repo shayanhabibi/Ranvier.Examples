@@ -49,6 +49,70 @@ let data () =
     complete graph (model.ExportAsync output)
     printfn "%s\nExported %s" model.Summary output
 
+let elmish () =
+    use graph = new Graph ()
+    use active = graph.Activate ()
+    let input = Path.Combine (AppContext.BaseDirectory, "samples", "expenses.json")
+    let output = Path.Combine (AppContext.BaseDirectory, "expense-decisions.json")
+
+    use review =
+        new ExpenseReview (
+            graph,
+            Func<_, _> (fun token -> ExpenseFiles.LoadAsync (input, token)),
+            Func<_, _, _> (fun rows token -> ExpenseFiles.SaveAsync (output, rows, token))
+        )
+
+    review.Load ()
+    complete graph review.Completion
+
+    if review.Snapshot.Length <> 3 then
+        failwith review.Error
+
+    let mutable notifications = 0
+
+    use observer =
+        review.ObserveApprovedTotal (
+            Action<decimal> (fun total ->
+                notifications <- notifications + 1
+                printfn "Approved total: %.2f" total)
+        )
+
+    review.SelectedId <- 1
+    review.Filter <- "Pending"
+
+    if notifications <> 1 then
+        failwith "Navigation notified the approved-total reader"
+
+    review.Approve ()
+    review.SelectedId <- 2
+    review.Approve ()
+
+    if not (review.Error.Contains ("receipt")) then
+        failwith "Receipt validation failed"
+
+    review.Reason <- "Please provide the missing receipt."
+    review.Reject ()
+    review.Undo ()
+    review.Redo ()
+
+    if
+        review.SelectedDecision <> "Rejected"
+        || review.ApprovedTotal <> 86m
+    then
+        failwith "Review history failed"
+
+    review.Save ()
+    complete graph review.Completion
+
+    if
+        review.IsDirty
+        || review.Error <> ""
+        || not (File.Exists output)
+    then
+        failwith review.Error
+
+    printfn "Elmish decisions saved to %s; %d total notifications." output notifications
+
 let support () =
     use graph = new Graph ()
     use active = graph.Activate ()

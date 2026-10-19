@@ -5,8 +5,9 @@ Real workflows for [Ranvier issue #63](https://github.com/shayanhabibi/Ranvier/i
 - **Support workbench:** search a local HTTP ticket service, edit drafts, reconcile server versions, recover from disconnection, and keep saves alive after leaving the editor.
 - **File processing:** stream real files through SHA-256 with bounded concurrency, reactive keyed lists, cancellation, retry and throttled progress.
 - **Data quality:** import a CSV, repair malformed measurements, inspect calibration certificates, convert units together, preserve drafts across reloads, and export valid rows.
+- **Elmish expense review:** use an immutable model, messages, file commands and selectors to review claims with validation, undo/redo and revision-aware saves.
 
-Both desktop launchers open the same three-tab workbench. The core examples use idiomatic F# and C#: [SupportDesk.fs](src/Ranvier.Examples.FSharp/SupportDesk.fs), [FileJobMonitor.cs](src/Ranvier.Examples.CSharp/Jobs/FileJobMonitor.cs), and [DataQuality.fs](src/Ranvier.Examples.FSharp/DataQuality.fs). The shared Avalonia host makes these models usable together; it does not duplicate each core in both languages.
+Both desktop launchers open the same four-tab workbench. The core examples use idiomatic F# and C#: [SupportDesk.fs](src/Ranvier.Examples.FSharp/SupportDesk.fs), [FileJobMonitor.cs](src/Ranvier.Examples.CSharp/Jobs/FileJobMonitor.cs), [DataQuality.fs](src/Ranvier.Examples.FSharp/DataQuality.fs), and [ExpenseReview.fs](src/Ranvier.Examples.FSharp/ExpenseReview.fs). The shared Avalonia host makes these models usable together; it does not duplicate each core in both languages.
 
 ## Setup
 
@@ -21,12 +22,12 @@ dotnet fsi build.fsx -- test
 
 After an ordinary clone, run `git submodule update --init --recursive`. Open [Ranvier.Examples.slnx](Ranvier.Examples.slnx) in Rider or another .NET IDE.
 
-Ranvier is a source dependency at `external/Ranvier`, pinned to **305d00908d3f7cfbc015bd3df051c650886377dc**. Projects reference Ranvier, Ranvier.CSharp and Ranvier.Query directly. No Ranvier package release is required. The first restore needs internet access.
+Ranvier is a source dependency at `external/Ranvier`, pinned to **305d00908d3f7cfbc015bd3df051c650886377dc**. Projects reference Ranvier, Ranvier.CSharp, Ranvier.Query and Ranvier.Elmish directly. No Ranvier package release is required. The first restore needs internet access.
 
 ## Run
 
 ```shell
-# Either launcher opens all three workflows
+# Either launcher opens all four workflows
 dotnet fsi build.fsx -- run-fsharp-desktop
 dotnet fsi build.fsx -- run-csharp-desktop
 
@@ -38,6 +39,9 @@ dotnet fsi build.fsx -- run-csharp-console
 
 # CSV repair and export
 dotnet fsi build.fsx -- run-data-console
+
+# Elmish review, undo/redo and JSON report
+dotnet fsi build.fsx -- run-elmish-console
 ```
 
 Console scenarios verify their outcomes and fail on unexpected behavior. The support console uses an isolated temporary ticket store; the data console writes `repaired.csv` beside its executable. File hashing reads inputs without modifying them.
@@ -51,6 +55,7 @@ Read the hands-on guides:
 - [Support: requests, drafts, conflicts and mutation ownership](docs/workflows/support.md)
 - [Files: worker admission, graph dispatch and terminal events](docs/workflows/jobs.md)
 - [Data: incremental projections, raw drafts and asynchronous selection](docs/workflows/data.md)
+- [Elmish: immutable updates, commands, undo/redo and selectors](docs/workflows/elmish.md)
 - [Reactive feature map and ownership](docs/workflows/features.md)
 
 The fixtures in [samples](samples) include two repairable invalid readings and local calibration records. No credentials or external service setup are needed.

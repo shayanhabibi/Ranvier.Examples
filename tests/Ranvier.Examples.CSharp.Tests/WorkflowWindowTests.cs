@@ -2,6 +2,8 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
+using Avalonia.Input;
+using Avalonia.Input.Raw;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Ranvier.Examples.Workflows.Desktop;
@@ -11,6 +13,47 @@ namespace Ranvier.Examples.CSharp.Tests;
 
 public sealed class WorkflowWindowTests
 {
+    private static void Press(Window window, string name)
+    {
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+        var button = Find<Button>(window, name);
+        Assert.True(button.IsEffectivelyEnabled);
+        Assert.True(button.Focus(), $"Could not focus {name}; visible={button.IsEffectivelyVisible}, bounds={button.Bounds}");
+        window.KeyPress(Key.Space, RawInputModifiers.None, PhysicalKey.Space, " ");
+        window.KeyRelease(Key.Space, RawInputModifiers.None, PhysicalKey.Space, " ");
+        Dispatcher.UIThread.RunJobs();
+    }
+    [AvaloniaFact]
+    public async Task ElmishTabReviewsUndoesAndSavesThroughControls()
+    {
+        var window = new WorkflowWindow(Path.Combine(AppContext.BaseDirectory, "ui-workflows", Guid.NewGuid().ToString("N")));
+        window.Show();
+        try
+        {
+            await window.Ready;
+            window.Tabs.SelectedIndex = 3;
+            await Until(() => window.Expenses.Model.Snapshot.Length == 3);
+            Find<ListBox>(window, "ExpenseRows").SelectedIndex = 0;
+            Press(window, "ExpenseApprove");
+            await Until(() => window.Expenses.Model.ApprovedTotal == 86m);
+            Press(window, "ExpenseUndo");
+            await Until(() => window.Expenses.Model.ApprovedTotal == 0m);
+            Press(window, "ExpenseRedo");
+            Find<ListBox>(window, "ExpenseRows").SelectedIndex = 1;
+            Find<TextBox>(window, "ExpenseReason").Text = "Please supply a receipt";
+            Press(window, "ExpenseReject");
+            await Until(() => window.Expenses.Model.SelectedDecision == "Rejected");
+            Press(window, "ExpenseSave");
+            await Until(() => !window.Expenses.Model.IsDirty && !window.Expenses.Model.IsSaving);
+            Assert.True(File.Exists(Path.Combine(window.DataDirectory, "expense-decisions.json")));
+            using var frame = window.CaptureRenderedFrame();
+            Assert.NotNull(frame);
+            frame.Save(Path.Combine(AppContext.BaseDirectory, "workflows-elmish.png"), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
+        }
+        finally { window.Close(); await window.Stopped; }
+    }
+
     private static T Find<T>(Window window, string name) where T : Control =>
         window.GetLogicalDescendants().OfType<T>().Distinct().Single(control => control.Name == name);
     private static async Task Until(Func<bool> condition)

@@ -45,6 +45,9 @@ let main args =
     | Some "data" ->
         Workflows.data ()
         0
+    | Some "elmish" ->
+        Workflows.elmish ()
+        0
     | _ ->
         Workflows.support ()
         0

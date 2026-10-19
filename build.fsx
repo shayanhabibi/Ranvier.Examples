@@ -179,6 +179,12 @@ module Stage =
             return stage "run CSV repair" { run (cmd $"dotnet run --project src/Ranvier.Examples.FSharp.Console -c {config} -- data") }
         }
 
+    let runElmish =
+        input {
+            let! config = Options.config
+            return stage "run Elmish expense review" { run (cmd $"dotnet run --project src/Ranvier.Examples.FSharp.Console -c {config} -- elmish") }
+        }
+
 exit
 <| rootCommandOfScript {
     name "build.fsx"
@@ -219,6 +225,11 @@ exit
     command "run-data-console" {
         description "Runs the CSV repair and export workflow"
         Stage.runData
+    }
+
+    command "run-elmish-console" {
+        description "Runs the Elmish expense review workflow"
+        Stage.runElmish
     }
 
     command "run-fsharp-desktop" {
