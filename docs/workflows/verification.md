@@ -9,6 +9,8 @@ Verified on Windows with .NET SDK 10.0.402 and the pinned Ranvier source revisio
 - F# semantic workspace check through fslangmcp: zero errors and zero warnings.
 - F# XML documentation audit: zero findings.
 - Comment hygiene check: no review markers.
+- Fresh recursive clone checked out the pinned submodule and built the complete Release solution with zero warnings/errors.
+- Both retained introductory console scenarios passed.
 - Actual headless desktop controls selected tickets/measurements and edited drafts; the rendered data view was inspected.
 
 An independent whole-branch review identified store ownership, hidden command errors, nonreactive Reload eligibility, decimal-comma parsing and a stale clean-row baseline. Regression tests reproduced these findings; all were corrected before the full suite above.
