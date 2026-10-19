@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup><PackageReference Include="Avalonia" Version="12.1.4" /><PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../Ranvier.Examples.FSharp/Ranvier.Examples.FSharp.fsproj" /><ProjectReference Include="../Ranvier.Examples.CSharp/Ranvier.Examples.CSharp.csproj" /></ItemGroup>
+</Project>

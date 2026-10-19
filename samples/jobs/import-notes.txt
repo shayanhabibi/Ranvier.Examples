@@ -1,0 +1,3 @@
+Import review
+Keep raw readings, apply explicit units, and retain every rejected row for inspection.
+The file monitor reads this real file and publishes its SHA-256 fingerprint.

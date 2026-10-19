@@ -6,6 +6,21 @@ namespace Ranvier.Examples.CSharp.Tests;
 
 public sealed class DataQualityTests
 {
+    [Fact]
+    public void DecimalCommaRequiresRepairAndCleanReloadAdvancesTheDraftBaseline()
+    {
+        string path = Input("1,North,\"19,5\",C,true\n2,South,10,C,true\n");
+        using var graph = new Graph(); using var active = graph.Activate();
+        using var data = new DataQualityModel(graph, Calibration);
+        GraphTasks.Complete(graph, data.LoadAsync(path));
+        Assert.Equal(1, data.InvalidCount);
+        File.WriteAllText(path, "id,station,value,unit,included\n1,North,19.5,C,true\n2,South,20,C,true\n");
+        GraphTasks.Complete(graph, data.ReloadAsync());
+        data.GetRow(2).RawText = "21";
+        Assert.False(data.GetRow(2).HasConflict);
+        File.Delete(path);
+    }
+
     private static string Input(string rows)
     {
         string path = Path.Combine(AppContext.BaseDirectory, "data-tests", Guid.NewGuid() + ".csv");

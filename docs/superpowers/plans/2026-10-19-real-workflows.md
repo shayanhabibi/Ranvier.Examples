@@ -1,5 +1,7 @@
 # Real reactive workflows implementation plan
 
+Execution completed on 2026-10-19. See [verification and implementation decisions](../../workflows/verification.md). The checklists below preserve the original task brief.
+
 > **For agentic workers:** Use superpowers:executing-plans for native task-by-task implementation. Track results in the plan's progress ledger.
 
 **Goal:** Make the support, job and data-repair stories real runnable workflows.

@@ -9,6 +9,15 @@ namespace Ranvier.Examples.CSharp.Tests;
 public sealed class FileJobMonitorTests
 {
     [Fact]
+    public void InvalidPathRejectsTheWholeQueueWithoutStrandedJobs()
+    {
+        using var graph = new Graph(); using var active = graph.Activate();
+        using var jobs = new FileJobMonitor(graph);
+        Assert.Throws<ArgumentException>(() => jobs.Queue(["valid.txt", "\0"]));
+        Assert.Empty(jobs.Snapshot);
+    }
+
+    [Fact]
     public void HashesActualFilesWithBoundedWorkersAndReactiveSummary()
     {
         string folder = Path.Combine(AppContext.BaseDirectory, "job-tests", Guid.NewGuid().ToString("N"));

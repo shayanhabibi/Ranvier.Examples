@@ -92,11 +92,12 @@ public sealed class FileJobMonitor : IDisposable
     public int[] Queue(IEnumerable<string> paths)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
+        string[] accepted = paths.Select(System.IO.Path.GetFullPath).ToArray();
         using var active = graph.Activate();
         var ids = new List<int>();
         Jobs.Edit(edit =>
         {
-            foreach (string path in paths)
+            foreach (string path in accepted)
             {
                 int id = ++nextId;
                 edit.AddOrUpdate(new(id, System.IO.Path.GetFullPath(path), "Queued", 0, 0, "", "", 1));

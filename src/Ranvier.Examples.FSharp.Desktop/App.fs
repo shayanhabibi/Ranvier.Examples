@@ -15,7 +15,14 @@ type App() =
 
     override this.OnFrameworkInitializationCompleted() =
         match this.ApplicationLifetime with
-        | :? IClassicDesktopStyleApplicationLifetime as desktop -> desktop.MainWindow <- OrderWindow ()
+        | :? IClassicDesktopStyleApplicationLifetime as desktop ->
+            if
+                System.Environment.GetCommandLineArgs ()
+                |> Array.contains "--intro"
+            then
+                desktop.MainWindow <- OrderWindow ()
+            else
+                desktop.MainWindow <- new Ranvier.Examples.Workflows.Desktop.WorkflowWindow ()
         | _ -> ()
 
         base.OnFrameworkInitializationCompleted ()

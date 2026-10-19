@@ -7,6 +7,17 @@ namespace Ranvier.Examples.CSharp.Tests;
 public sealed class SupportApiTests
 {
     [Fact]
+    public async Task ASecondServerCannotOverwriteAnAlreadyOpenStore()
+    {
+        string folder = Path.Combine(AppContext.BaseDirectory, "support-tests", Guid.NewGuid().ToString("N"));
+        await using var server = await SupportApi.StartAsync(folder, TestContext.Current.CancellationToken);
+        await Assert.ThrowsAsync<IOException>(async () =>
+        {
+            await using var second = await SupportApi.StartAsync(folder, TestContext.Current.CancellationToken);
+        });
+    }
+
+    [Fact]
     public async Task SavePersistsAcrossServerRestartAndRejectsStaleVersions()
     {
         string folder = Path.Combine(AppContext.BaseDirectory, "support-tests", Guid.NewGuid().ToString("N"));

@@ -12,6 +12,7 @@
     <File Path="build.fsx" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/Ranvier.Examples.Workflows.Desktop/Ranvier.Examples.Workflows.Desktop.csproj" />
     <Project Path="src/Ranvier.Examples.FSharp/Ranvier.Examples.FSharp.fsproj" />
     <Project Path="src/Ranvier.Examples.CSharp/Ranvier.Examples.CSharp.csproj" />
     <Project Path="src/Ranvier.Examples.FSharp.Console/Ranvier.Examples.FSharp.Console.fsproj" />

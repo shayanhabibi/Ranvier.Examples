@@ -34,6 +34,9 @@ jobs:
         run: |
           dotnet fsi build.fsx -- run-fsharp-console
           dotnet fsi build.fsx -- run-csharp-console
+          dotnet fsi build.fsx -- run-data-console
+          dotnet run --no-build -c Release --project src/Ranvier.Examples.FSharp.Console -- intro
+          dotnet run --no-build -c Release --project src/Ranvier.Examples.CSharp.Console -- intro
       - name: Verify dependency sources are unchanged
         run: |
           test -z "$(git -C external/Ranvier status --porcelain)"

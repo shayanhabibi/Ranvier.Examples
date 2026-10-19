@@ -5,8 +5,7 @@ open System.Globalization
 open Ranvier
 open Ranvier.Examples.FSharp
 
-[<EntryPoint>]
-let main _ =
+let intro () =
     CultureInfo.CurrentCulture <- CultureInfo.InvariantCulture
     use graph = new Graph ()
     use active = graph.Activate ()
@@ -38,3 +37,14 @@ let main _ =
 
     Console.WriteLine ("Walkthrough passed.")
     0
+
+[<EntryPoint>]
+let main args =
+    match Array.tryHead args with
+    | Some "intro" -> intro ()
+    | Some "data" ->
+        Workflows.data ()
+        0
+    | _ ->
+        Workflows.support ()
+        0

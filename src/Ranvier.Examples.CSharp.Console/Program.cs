@@ -1,6 +1,7 @@
 using System.Globalization;
 using Ranvier;
 using Ranvier.Examples.CSharp;
+if (!args.Contains("intro")) { JobsScenario.Run(); return; }
 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 using var graph = new Graph();
 using var active = graph.Activate();

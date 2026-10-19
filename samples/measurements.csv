@@ -1,0 +1,7 @@
+id,station,value,unit,included
+1,North,21.3,C,true
+2,South,68,F,true
+3,West,294.15,K,true
+4,North,sensor fault,C,true
+5,South,20,deg,true
+6,"West, annex",22,C,false

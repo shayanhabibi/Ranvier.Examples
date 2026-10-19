@@ -20,4 +20,9 @@
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)samples/**/*"
+              Link="samples/%(RecursiveDir)%(Filename)%(Extension)"
+              CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
 </Project>

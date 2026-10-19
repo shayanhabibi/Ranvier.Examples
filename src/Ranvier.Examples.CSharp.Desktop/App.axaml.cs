@@ -8,7 +8,9 @@ public sealed partial class App : Application
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) desktop.MainWindow = new OrderWindow();
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            desktop.MainWindow = Environment.GetCommandLineArgs().Contains("--intro")
+                ? new OrderWindow() : new Ranvier.Examples.Workflows.Desktop.WorkflowWindow();
         base.OnFrameworkInitializationCompleted();
     }
 }

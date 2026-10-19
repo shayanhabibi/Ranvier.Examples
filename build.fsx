@@ -173,6 +173,12 @@ module Stage =
             return stage "run example" { run (cmd $"dotnet run --project {project} -c {config}") }
         }
 
+    let runData =
+        input {
+            let! config = Options.config
+            return stage "run CSV repair" { run (cmd $"dotnet run --project src/Ranvier.Examples.FSharp.Console -c {config} -- data") }
+        }
+
 exit
 <| rootCommandOfScript {
     name "build.fsx"
@@ -208,6 +214,11 @@ exit
     command "run-csharp-console" {
         description "Runs the C# core workflow"
         Stage.runExample "src/Ranvier.Examples.CSharp.Console"
+    }
+
+    command "run-data-console" {
+        description "Runs the CSV repair and export workflow"
+        Stage.runData
     }
 
     command "run-fsharp-desktop" {

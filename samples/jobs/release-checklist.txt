@@ -1,0 +1,4 @@
+Release checklist
+Build every host.
+Test cancelled requests, saved receipts, incremental edits and terminal worker states.
+Check the dependency source tree stays clean.

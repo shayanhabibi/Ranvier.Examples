@@ -12,5 +12,6 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="../Ranvier.Examples.CSharp/Ranvier.Examples.CSharp.csproj" />
+        <ProjectReference Include="../Ranvier.Examples.Workflows.Desktop/Ranvier.Examples.Workflows.Desktop.csproj" />
     </ItemGroup>
 </Project>
