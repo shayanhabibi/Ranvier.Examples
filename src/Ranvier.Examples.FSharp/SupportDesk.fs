@@ -55,7 +55,8 @@ type SupportDesk(graph: Graph, service: ITicketService) =
                         completed.TrySetCanceled () |> ignore
                     else
                         try
-                            completed.TrySetResult (action ()) |> ignore
+                            completed.TrySetResult (graph.Run action)
+                            |> ignore
                         with error ->
                             completed.TrySetException (error) |> ignore)
             with error ->
@@ -245,19 +246,22 @@ type SupportDesk(graph: Graph, service: ITicketService) =
                           State = createDraft (fun _ -> lease.Value.State)
                           Version = createSignal 0 }
 
+                    createEffect (fun () ->
+                        match lease.State.Data with
+                        | Some accepted when
+                            not value.Notes.IsEdited
+                            && not value.State.IsEdited
+                            ->
+                            value.Version.Value <- accepted.Version
+                        | _ -> ())
+
                     editor.Value <- Some value
                     value))
 
         let request = selected.Lease.EnsureAsync ()
 
         task {
-            let! accepted = request
-
-            let! _ =
-                post (fun () ->
-                    if not selected.Owner.IsDisposed then
-                        selected.Version.Value <- accepted.Version)
-
+            let! _ = request
             return ()
         }
 

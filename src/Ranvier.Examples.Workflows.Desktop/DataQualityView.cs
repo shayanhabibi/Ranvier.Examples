@@ -40,23 +40,20 @@ public sealed class DataQualityView : ReactiveScreen
         });
         filter = Nodes.Computed(nameof(Filter), () => Model.Filter);
         selectedIndex = Nodes.Computed(nameof(SelectedIndex), () => Array.IndexOf(Model.VisibleIds, Model.SelectedId));
-        Load = Nodes.Command(async (_, _) => await Model.LoadAsync(Source));
-        Reload = Nodes.Command(async (_, _) => await Model.ReloadAsync(), () => Model.SourcePath.Length != 0);
-        Export = Nodes.Command(async (_, _) => await Model.ExportAsync(Destination),
+        Load = Command(async (_, _) => await Model.LoadAsync(Source));
+        Reload = Command(async (_, _) => await Model.ReloadAsync(), () => Model.SourcePath.Length != 0);
+        Export = Command(async (_, _) => await Model.ExportAsync(Destination),
             () => Model.InvalidCount == 0 && Model.ValidCount > 0 && !string.IsNullOrWhiteSpace(destination.Value));
-        Celsius = Nodes.Command(_ => Model.ApplyUnitToIncluded("C"));
-        Fahrenheit = Nodes.Command(_ => Model.ApplyUnitToIncluded("F"));
-        Kelvin = Nodes.Command(_ => Model.ApplyUnitToIncluded("K"));
-        Exclude = Nodes.Command(_ => Model.ExcludeInvalid());
-        Accept = Nodes.Command(_ => { if (Current is not null) Model.AcceptUpstream(Model.SelectedId); }, () => Current is not null);
-        var captions = Nodes.Run(() => Model.Captions.AsObservableCollection());
-        var list = new ListBox
-        {
-            Name = "MeasurementRows",
-            ItemsSource = captions,
-            MinHeight = 340,
-            [!ListBox.SelectedIndexProperty] = new Binding(nameof(SelectedIndex)) { Mode = BindingMode.TwoWay }
-        };
+        Celsius = Command(_ => Model.ApplyUnitToIncluded("C"));
+        Fahrenheit = Command(_ => Model.ApplyUnitToIncluded("F"));
+        Kelvin = Command(_ => Model.ApplyUnitToIncluded("K"));
+        Exclude = Command(_ => Model.ExcludeInvalid());
+        Accept = Command(_ => { if (Current is not null) Model.AcceptUpstream(Model.SelectedId); }, () => Current is not null);
+        var list = Own(new StableKeyList(graph, () => Model.VisibleIds, () => Model.SelectedId,
+            id => Nodes.Run(() => Model.SelectedId = id),
+            id => Model.Rows.TryGetValue(id, out var row) ? row.Display : ""));
+        list.Name = "MeasurementRows";
+        list.MinHeight = 340;
         var data = Ui.Card(Ui.Stack(Ui.Text("SOURCE CSV", 12), Ui.Edit("CsvSource", nameof(Source)),
             Ui.Actions(Ui.Button("CsvLoad", "Load", nameof(Load)), Ui.Button("CsvReload", "Reload source", nameof(Reload))),
             Ui.Read(nameof(Status), 12), Ui.Choice("CsvFilter", nameof(Filter), ["All", "Invalid", "Included", "Edited"]), list));
@@ -72,7 +69,6 @@ public sealed class DataQualityView : ReactiveScreen
             Ui.Text("EXPORT DESTINATION", 12), Ui.Edit("CsvDestination", nameof(Destination)),
             Ui.Button("CsvExport", "Export included rows", nameof(Export)), Ui.Read(nameof(LastError), 13, "#B42318"),
             Ui.Text("Raw invalid text stays editable. Reload preserves local drafts. Unchanged rows reuse their cached calculations.", 12, "#536274")));
-        WatchErrors(Load, Reload, Export, Celsius, Fahrenheit, Kelvin, Exclude, Accept);
         Content = new ScrollViewer { Content = Ui.Columns(data, editor, "*,*") };
     }
     public string Source { get => source.Value; set => Nodes.Run(() => source.Value = value ?? ""); }

@@ -26,23 +26,21 @@ public sealed class ExpenseReviewView : ReactiveScreen
             + (Model.IsDirty ? " · unsaved decisions" : " · saved baseline"));
         status = Nodes.Computed(nameof(Status), () => Model.Status);
         failure = Nodes.Computed(nameof(Failure), () => Model.Error);
-        Load = Nodes.Command(_ => Model.Load(), () => Model.CanLoad);
-        Approve = Nodes.Command(_ => Model.Approve(), () => Model.SelectedId != 0 && !Model.IsLoading);
-        Reject = Nodes.Command(_ => Model.Reject(), () => Model.SelectedId != 0 && !Model.IsLoading);
-        Undo = Nodes.Command(_ => Model.Undo(), () => Model.CanUndo);
-        Redo = Nodes.Command(_ => Model.Redo(), () => Model.CanRedo);
-        Save = Nodes.Command(_ => Model.Save(), () => Model.CanSave);
-        WatchErrors(Load, Approve, Reject, Undo, Redo, Save);
+        Load = Command(_ => Model.Load(), () => Model.CanLoad);
+        Approve = Command(_ => Model.Approve(), () => Model.SelectedId != 0 && !Model.IsLoading);
+        Reject = Command(_ => Model.Reject(), () => Model.SelectedId != 0 && !Model.IsLoading);
+        Undo = Command(_ => Model.Undo(), () => Model.CanUndo);
+        Redo = Command(_ => Model.Redo(), () => Model.CanRedo);
+        Save = Command(_ => Model.Save(), () => Model.CanSave);
 
-        var list = new ListBox
-        {
-            Name = "ExpenseRows",
-            MinHeight = 300,
-            [!ItemsControl.ItemsSourceProperty] = new Binding(nameof(Rows)),
-            [!ListBox.SelectedItemProperty] = new Binding(nameof(Selected)) { Mode = BindingMode.TwoWay },
-            ItemTemplate = new FuncDataTemplate<ExpenseDecision>((row, _) => row is null ? null
-                : Ui.Text($"#{row.Claim.Id} · {row.Claim.Employee} · {row.Claim.Amount:F2}\n{row.Claim.Purpose}\n{row.Decision}"))
-        };
+        var list = Own(new StableKeyList(graph, () => Model.Visible.Select(row => row.Claim.Id).ToArray(),
+            () => Model.SelectedId, id => Nodes.Run(() => Model.SelectedId = id), id =>
+            {
+                var row = Model.Snapshot.FirstOrDefault(item => item.Claim.Id == id);
+                return row is null ? "" : $"#{row.Claim.Id} · {row.Claim.Employee} · {row.Claim.Amount:F2}\n{row.Claim.Purpose}\n{row.Decision}";
+            }));
+        list.Name = "ExpenseRows";
+        list.MinHeight = 300;
         var queue = Ui.Card(Ui.Stack(Ui.Text("EXPENSE CLAIMS / ELMISH", 12),
             Ui.Text("Import JSON claims, review receipts, and write a decision report.", 14),
             Ui.Choice("ExpenseFilter", nameof(Filter), ["All", "Pending", "Approved", "Rejected"]),

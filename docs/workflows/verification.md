@@ -1,5 +1,9 @@
 # Verification record
 
+## Repeated-interaction correctness review
+
+All 91 Release tests passed after the [correctness review](correctness-review.md): 82 C# plus 9 F# tests, including 13 new regression cases with repeated desktop interactions, tab switching, retry/recovery and close/reopen rounds. The review reproduced and fixed seven categories of defects; the report records each finding, its impact and the checks performed.
+
 ## Elmish addition
 
 Verified on 2026-10-19 after adding expense review:

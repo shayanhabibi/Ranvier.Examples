@@ -53,8 +53,8 @@ type MeasurementRow(graph: Graph, initial: MeasurementRecord) =
                             )
                         then
                             None, "Enter a numeric value using a decimal point."
-                        elif number < -1000000m || number > 1000000m then
-                            None, "Value must be between -1000000 and 1000000."
+                        elif number < -2000000m || number > 2000000m then
+                            None, "Normalized temperature must be between -273.15 and 1000000 C."
                         else
                             let celsius =
                                 match unit with
@@ -66,6 +66,7 @@ type MeasurementRow(graph: Graph, initial: MeasurementRecord) =
                             match celsius with
                             | None -> None, "Unit must be C, F or K."
                             | Some value when value < -273.15m -> None, "Temperature is below absolute zero."
+                            | Some value when value > 1000000m -> None, "Normalized temperature must be at most 1000000 C."
                             | Some value -> Some value, "")
 
                 let display =
@@ -258,7 +259,7 @@ type DataQualityModel(graph: Graph, lookup: Func<string, CancellationToken, Task
                         doneTask.TrySetCanceled () |> ignore
                     else
                         try
-                            doneTask.TrySetResult (action ()) |> ignore
+                            doneTask.TrySetResult (graph.Run action) |> ignore
                         with error ->
                             doneTask.TrySetException (error) |> ignore)
             with error ->

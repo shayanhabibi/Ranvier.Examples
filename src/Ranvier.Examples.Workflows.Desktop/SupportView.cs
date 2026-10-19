@@ -35,26 +35,24 @@ public sealed class SupportView : ReactiveScreen
         conflict = Nodes.Computed(nameof(Conflict), () => Model.HasConflict ? "The server changed. Your draft is preserved; choose which baseline to use."
             : Model.IsDirty ? "Unsaved local draft" : "Draft follows the accepted record");
         connection = Nodes.Computed(nameof(ConnectionAction), () => online.Value ? "Disconnect API" : "Restore API");
-        Save = Nodes.Command(async (_, _) => { await Model.SaveAsync(); }, () => Model.CanSave);
-        Refresh = Nodes.Command(async (_, _) => { await Model.RefreshAsync(); });
-        Back = Nodes.Command(_ => Model.Back());
-        Accept = Nodes.Command(_ => Model.AcceptUpstream(), () => Model.SelectedId != 0);
-        Rebase = Nodes.Command(_ => Model.Rebase(), () => Model.HasConflict);
-        ExternalUpdate = Nodes.Command(async (_, _) => await externalUpdate(), () => Model.SelectedId != 0);
-        Connection = Nodes.Command(_ =>
+        Save = Command(async (_, _) => { await Model.SaveAsync(); }, () => Model.CanSave);
+        Refresh = Command(async (_, _) => { await Model.RefreshAsync(); });
+        Back = Command(_ => Model.Back());
+        Accept = Command(_ => Model.AcceptUpstream(), () => Model.SelectedId != 0);
+        Rebase = Command(_ => Model.Rebase(), () => Model.HasConflict);
+        ExternalUpdate = Command(async (_, _) => await externalUpdate(), () => Model.SelectedId != 0);
+        Connection = Command(_ =>
         {
             online.Value = !online.Value;
             api.Available = online.Value;
             Fire(async () => { await Model.RefreshQueueAsync(); });
         });
 
-        var list = new ListBox
-        {
-            Name = "SupportQueue",
-            MinHeight = 330,
-            [!ItemsControl.ItemsSourceProperty] = new Binding(nameof(Tickets)),
-            [!ListBox.SelectedItemProperty] = new Binding(nameof(SelectedTicket)) { Mode = BindingMode.TwoWay }
-        };
+        var list = Own(new StableKeyList(graph, () => Model.Queue.Select(row => row.Id).ToArray(),
+            () => Model.SelectedId, id => Fire(async () => await Model.OpenAsync(id)),
+            id => Model.Queue.FirstOrDefault(row => row.Id == id)?.ToString() ?? ""));
+        list.Name = "SupportQueue";
+        list.MinHeight = 330;
         var queue = Ui.Card(Ui.Stack(Ui.Text("TICKET QUEUE", 12),
             Ui.Edit("SupportSearch", nameof(Search)), Ui.Read(nameof(Status), 12), list,
             Ui.Button("SupportConnection", "", nameof(Connection))));
@@ -72,7 +70,6 @@ public sealed class SupportView : ReactiveScreen
             Ui.Button("SupportExternal", "Apply colleague update through API", nameof(ExternalUpdate)),
             Ui.Read(nameof(Feedback), 13), Ui.Read(nameof(LastError), 13, "#B42318"),
             Ui.Text("Save a draft, then go Back. The session owns the save while the editor and its detail lease are released.", 12, "#536274")));
-        WatchErrors(Save, Refresh, Back, Accept, Rebase, ExternalUpdate, Connection);
         Content = new ScrollViewer { Content = Ui.Columns(queue, editor) };
     }
 

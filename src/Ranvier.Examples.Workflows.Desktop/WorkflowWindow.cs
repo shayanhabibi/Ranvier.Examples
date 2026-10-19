@@ -22,6 +22,8 @@ public sealed class WorkflowWindow : Window
     private TicketHttpClient? http;
     private SupportDesk? supportModel;
     private bool closed;
+    private readonly CancellationTokenSource lifetime = new();
+    private Task initialization = Task.CompletedTask;
     public string DataDirectory { get; }
     public TabControl Tabs { get; }
     public SupportView Support { get; private set; } = null!;
@@ -73,7 +75,7 @@ public sealed class WorkflowWindow : Window
         content.Children.Add(Tabs);
         content.Margin = new Thickness(28);
         Content = content;
-        Opened += async (_, _) => await InitializeAsync(local);
+        Opened += (_, _) => { initialization = InitializeAsync(local); };
         Closed += async (_, _) => await StopAsync();
     }
 
@@ -89,23 +91,43 @@ public sealed class WorkflowWindow : Window
     {
         try
         {
-            var server = await SupportApi.StartAsync(Path.Combine(DataDirectory, "support"));
-            if (closed) { await server.DisposeAsync(); ready.TrySetCanceled(); return; }
-            api = server;
-            http = new TicketHttpClient(server.BaseAddress);
             using var active = graph.Activate();
-            supportModel = new SupportDesk(graph, http);
-            Support = new SupportView(graph, supportModel, api, ApplyExternalUpdateAsync);
-            ((TabItem[])Tabs.ItemsSource!)[0].Content = Support;
+            var dataLoad = ObserveStartupAsync(dataModel.LoadAsync(local));
             expenseModel.Load();
-            await Task.WhenAll(supportModel.SearchAsync(""), dataModel.LoadAsync(local), expenseModel.Completion);
-            ready.TrySetResult();
+            try
+            {
+                var server = await SupportApi.StartAsync(Path.Combine(DataDirectory, "support"), lifetime.Token);
+                if (closed)
+                {
+                    await server.DisposeAsync();
+                    await Task.WhenAll(dataLoad, expenseModel.Completion);
+                    return;
+                }
+                api = server;
+                http = new TicketHttpClient(server.BaseAddress);
+                supportModel = new SupportDesk(graph, http);
+                Support = new SupportView(graph, supportModel, api, ApplyExternalUpdateAsync);
+                ((TabItem[])Tabs.ItemsSource!)[0].Content = Support;
+                await ObserveStartupAsync(supportModel.SearchAsync(""));
+            }
+            catch (Exception error)
+            {
+                if (!closed) ((TabItem[])Tabs.ItemsSource!)[0].Content = Ui.Text("Ticket service unavailable: " + error.Message, 16, "#B42318");
+            }
+            await Task.WhenAll(dataLoad, expenseModel.Completion);
+            if (!closed) ready.TrySetResult();
         }
         catch (Exception error)
         {
-            if (!closed) ((TabItem[])Tabs.ItemsSource!)[0].Content = Ui.Text("Initialization failed: " + error.Message, 16, "#B42318");
-            ready.TrySetException(error);
+            if (!closed) ready.TrySetException(error);
         }
+        finally { if (closed) ready.TrySetCanceled(); }
+    }
+
+    private static async Task ObserveStartupAsync(Task task)
+    {
+        try { await task; }
+        catch (Exception) { }
     }
 
     /// <summary>Writes a new server version through HTTP, leaving the independent editor draft intact.</summary>
@@ -124,12 +146,15 @@ public sealed class WorkflowWindow : Window
         closed = true;
         try
         {
+            lifetime.Cancel();
             Support?.Dispose(); Jobs.Dispose(); Data.Dispose(); Expenses.Dispose();
             supportModel?.Dispose(); dataModel.Dispose(); jobModel.Dispose(); expenseModel.Dispose();
+            await initialization;
             await Task.WhenAll(jobModel.Completion, expenseModel.Completion);
             http?.Dispose();
             if (api is not null) await api.DisposeAsync();
             graph.Dispose();
+            lifetime.Dispose();
             ready.TrySetCanceled();
             stopped.TrySetResult();
         }

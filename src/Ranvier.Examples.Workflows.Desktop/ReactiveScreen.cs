@@ -13,17 +13,16 @@ public abstract class ReactiveScreen : UserControl, INotifyPropertyChanged, IDis
 {
     protected readonly ReactiveBindings Nodes;
     private readonly Signal<string> error;
-    private readonly Signal<ReactiveCommand[]> commands;
     private readonly BoundValue<string> errorText;
     private bool disposed;
+    private long operationVersion;
+    private readonly List<IDisposable> owned = [];
 
     protected ReactiveScreen(Graph graph)
     {
         Nodes = new ReactiveBindings(this, graph);
         error = Nodes.Run(() => Reactive.Signal(""));
-        commands = Nodes.Run(() => Reactive.Signal(Array.Empty<ReactiveCommand>()));
-        errorText = Nodes.Computed(nameof(LastError), () =>
-            commands.Value.Select(command => command.Error).FirstOrDefault(failure => failure is not null)?.Message ?? error.Value);
+        errorText = Nodes.Computed(nameof(LastError), () => error.Value);
         DataContext = this;
     }
 
@@ -35,19 +34,52 @@ public abstract class ReactiveScreen : UserControl, INotifyPropertyChanged, IDis
 
     public string LastError => errorText.Value;
 
-    protected void WatchErrors(params ReactiveCommand[] values) => Nodes.Run(() => commands.Value = values);
+    protected T Own<T>(T resource) where T : IDisposable { owned.Add(resource); return resource; }
 
-    protected void Fire(Func<Task> action) => _ = ObserveAsync(action);
-    private async Task ObserveAsync(Func<Task> action)
+    private long BeginAction()
     {
-        try { await action(); }
-        catch (OperationCanceledException) { }
+        long version = ++operationVersion;
+        if (!disposed) Nodes.Run(() => error.Value = "");
+        return version;
+    }
+
+    protected ReactiveCommand Command(Action<object?> action, Func<bool>? canExecute = null) =>
+        Nodes.Command(parameter =>
+        {
+            long version = BeginAction();
+            try { action(parameter); }
+            catch (Exception failure)
+            {
+                if (!disposed && version == operationVersion) Nodes.Run(() => error.Value = failure.Message);
+                throw;
+            }
+        }, canExecute);
+
+    protected ReactiveCommand Command(Func<object?, CancellationToken, Task> action, Func<bool>? canExecute = null) =>
+        Nodes.Command((parameter, token) => ObserveAsync(() => action(parameter, token), true), canExecute);
+
+    protected void Fire(Func<Task> action) => _ = ObserveAsync(action, false);
+    private async Task ObserveAsync(Func<Task> action, bool propagate)
+    {
+        long version = BeginAction();
+        try
+        {
+            await action();
+        }
+        catch (OperationCanceledException) { if (propagate) throw; }
         catch (Exception failure)
         {
-            if (!disposed) Nodes.Run(() => error.Value = failure.Message);
+            if (!disposed && version == operationVersion) Nodes.Run(() => error.Value = failure.Message);
+            if (propagate) throw;
         }
     }
-    public virtual void Dispose() { if (disposed) return; disposed = true; Nodes.Dispose(); }
+    public virtual void Dispose()
+    {
+        if (disposed) return;
+        disposed = true;
+        foreach (var resource in owned) resource.Dispose();
+        Nodes.Dispose();
+    }
 }
 
 internal static class Ui

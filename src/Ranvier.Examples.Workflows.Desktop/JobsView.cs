@@ -23,11 +23,15 @@ public sealed class JobsView : ReactiveScreen
         detail = Nodes.Computed(nameof(Detail), () => Model.SelectedDetail);
         filter = Nodes.Computed(nameof(Filter), () => Model.Filter);
         selected = Nodes.Computed(nameof(SelectedJob), () => Model.Jobs.Rows.TryGetValue(Model.SelectedId, out var job) ? job : null);
-        QueueFiles = Nodes.Command(_ => Model.Queue(Paths.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)));
-        Samples = Nodes.Command(_ => QueueSamples());
-        Cancel = Nodes.Command(_ => Model.Cancel(Model.SelectedId), () => SelectedJob?.State is "Queued" or "Running");
-        Retry = Nodes.Command(_ => Model.Retry(Model.SelectedId), () => SelectedJob?.State is "Failed" or "Cancelled");
-        var list = new ListBox { Name = "FileJobs", ItemsSource = Model.Items, MinHeight = 360, [!ListBox.SelectedItemProperty] = new Binding(nameof(SelectedJob)) { Mode = BindingMode.TwoWay } };
+        QueueFiles = Command(_ => Model.Queue(Paths.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)));
+        Samples = Command(_ => QueueSamples());
+        Cancel = Command(_ => Model.Cancel(Model.SelectedId), () => SelectedJob?.State is "Queued" or "Running");
+        Retry = Command(_ => Model.Retry(Model.SelectedId), () => SelectedJob?.State is "Failed" or "Cancelled");
+        var list = Own(new StableKeyList(graph, () => Model.Visible.Keys, () => Model.SelectedId,
+            id => Nodes.Run(() => Model.SelectedId = id),
+            id => Model.Jobs.Rows.TryGetValue(id, out var row) ? row.ToString() : ""));
+        list.Name = "FileJobs";
+        list.MinHeight = 360;
         var inputs = Ui.Card(Ui.Stack(Ui.Text("READ-ONLY INPUT FILES", 12), Ui.Edit("JobPaths", nameof(Paths), true),
             Ui.Text("One absolute path per line. Files are streamed through SHA-256 with two worker slots.", 12, "#536274"),
             Ui.Actions(Ui.Button("QueueFiles", "Queue files", nameof(QueueFiles)), Ui.Button("QueueSamples", "Queue sample files", nameof(Samples))),
@@ -38,7 +42,6 @@ public sealed class JobsView : ReactiveScreen
             Ui.Actions(Ui.Button("CancelJob", "Cancel selected", nameof(Cancel)), Ui.Button("RetryJob", "Retry failed / cancelled", nameof(Retry))),
             Ui.Read(nameof(LastError), 13, "#B42318"),
             Ui.Text("Progress presentation is throttled. Every terminal transition is kept independently; retries reuse the stable job ID.", 12, "#536274")));
-        WatchErrors(QueueFiles, Samples, Cancel, Retry);
         Content = new ScrollViewer { Content = Ui.Columns(inputs, results, "*,*") };
     }
     public string Paths { get => paths.Value; set => Nodes.Run(() => paths.Value = value ?? ""); }

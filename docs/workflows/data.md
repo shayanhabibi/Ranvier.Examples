@@ -11,6 +11,6 @@ Choose Data quality. The initial CSV contains six station readings: three includ
 
 [DataQuality.fs](../../src/Ranvier.Examples.FSharp/DataQuality.fs) parses CSV off-thread, validates structure and unique IDs, then merges rows on the graph. Each row owns editable raw-text/unit/inclusion drafts and a memoized normalization calculation. Invalid raw text remains visible. Numeric input uses a decimal point; decimal commas require repair rather than silently changing scale.
 
-Keyed row projections filter, map captions and incrementally calculate counts, sums and means. The UI list uses the projection's observable collection adapter. Selection drives a separate asynchronous calibration lookup, with pending/error boundaries and superseded-result suppression. The desktop lookup reads the bundled JSON calibration records.
+Keyed row projections filter, map captions and incrementally calculate counts, sums and means. The UI list follows stable row keys and binds each caption independently, retaining selection while cells change. Selection drives a separate asynchronous calibration lookup, with pending/error boundaries and superseded-result suppression. The desktop lookup reads the bundled JSON calibration records.
 
 The F# `data` console checks the repair result and unchanged-row execution count, converts units in a batch, and writes a repaired CSV. Tests also cover quoted station names, failed export, source changes and out-of-order calibration completions.
