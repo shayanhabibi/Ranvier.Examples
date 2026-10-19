@@ -4,8 +4,11 @@
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="Order.fs" />
+        <Compile Include="SupportDesk.fs" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="../../external/Ranvier/src/Ranvier/Ranvier.fsproj" />
+        <ProjectReference Include="../../external/Ranvier/src/Ranvier.Query/Ranvier.Query.fsproj" />
+        <ProjectReference Include="../Ranvier.Examples.CSharp/Ranvier.Examples.CSharp.csproj" />
     </ItemGroup>
 </Project>
