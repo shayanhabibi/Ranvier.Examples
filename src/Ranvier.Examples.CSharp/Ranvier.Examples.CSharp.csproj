@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
     <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
         <ProjectReference Include="../../external/Ranvier/src/Ranvier.CSharp/Ranvier.CSharp.fsproj" />
     </ItemGroup>
 </Project>
