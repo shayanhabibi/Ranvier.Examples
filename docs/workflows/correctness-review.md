@@ -2,6 +2,8 @@
 
 Reviewed every shipped workflow on 2026-10-19, starting from commit 8a96eed. The review included independent source reviews and new tests through actual Avalonia controls, using real loopback HTTP and files where relevant.
 
+The [postmortem](postmortem.md) explains why implementation mistakes escaped the original tests and reviews. The confirmed defects were in these examples; the review established no Ranvier correctness defect.
+
 ## Findings and fixes
 
 - **Support — async graph activation (high):** saves could reach the server, then fail local reconciliation with "No ambient graph on this thread." The callback was on the graph thread but lacked activation. Support and CSV completion callbacks now execute their actions through graph.Run.

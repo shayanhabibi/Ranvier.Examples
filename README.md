@@ -58,6 +58,7 @@ Read the hands-on guides:
 - [Elmish: immutable updates, commands, undo/redo and selectors](docs/workflows/elmish.md)
 - [Reactive feature map and ownership](docs/workflows/features.md)
 - [Repeated-interaction correctness review and regression coverage](docs/workflows/correctness-review.md)
+- [Implementation and verification postmortem](docs/workflows/postmortem.md)
 
 The fixtures in [samples](samples) include two repairable invalid readings and local calibration records. No credentials or external service setup are needed.
 
