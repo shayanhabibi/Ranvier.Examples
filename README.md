@@ -6,6 +6,7 @@ Real workflows for [Ranvier issue #63](https://github.com/shayanhabibi/Ranvier/i
 - **File processing:** stream real files through SHA-256 with bounded concurrency, reactive keyed lists, cancellation, retry and throttled progress.
 - **Data quality:** import a CSV, repair malformed measurements, inspect calibration certificates, convert units together, preserve drafts across reloads, and export valid rows.
 - **Elmish expense review:** use an immutable model, messages, file commands and selectors to review claims with validation, undo/redo and revision-aware saves.
+- **Shop incident replay:** persist a cart, capture overlapping async shipping requests in an untraced production build, then reproduce the stale-response bug in a traced development build with zero live service calls.
 
 Both desktop launchers open the same four-tab workbench. The core examples use idiomatic F# and C#: [SupportDesk.fs](src/Ranvier.Examples.FSharp/SupportDesk.fs), [FileJobMonitor.cs](src/Ranvier.Examples.CSharp/Jobs/FileJobMonitor.cs), [DataQuality.fs](src/Ranvier.Examples.FSharp/DataQuality.fs), and [ExpenseReview.fs](src/Ranvier.Examples.FSharp/ExpenseReview.fs). The shared Avalonia host makes these models usable together; it does not duplicate each core in both languages.
 
@@ -22,7 +23,7 @@ dotnet fsi build.fsx -- test
 
 After an ordinary clone, run `git submodule update --init --recursive`. Open [Ranvier.Examples.slnx](Ranvier.Examples.slnx) in Rider or another .NET IDE.
 
-Ranvier is a source dependency at `external/Ranvier`, pinned to **305d00908d3f7cfbc015bd3df051c650886377dc**. Projects reference Ranvier, Ranvier.CSharp, Ranvier.Query and Ranvier.Elmish directly. No Ranvier package release is required. The first restore needs internet access.
+Ranvier is a source dependency at `external/Ranvier`, pinned to **6066b933bf220027e942751b05474a40d5c0414a**. Projects reference Ranvier, Ranvier.CSharp, Ranvier.Query, Ranvier.Elmish and Ranvier.Persistence directly. No Ranvier package release is required. The first restore needs internet access.
 
 ## Run
 
@@ -56,6 +57,7 @@ Read the hands-on guides:
 - [Files: worker admission, graph dispatch and terminal events](docs/workflows/jobs.md)
 - [Data: incremental projections, raw drafts and asynchronous selection](docs/workflows/data.md)
 - [Elmish: immutable updates, commands, undo/redo and selectors](docs/workflows/elmish.md)
+- [Shop: persisted production incidents and traced async replay](docs/workflows/shop-replay.md)
 - [Reactive feature map and ownership](docs/workflows/features.md)
 - [Repeated-interaction correctness review and regression coverage](docs/workflows/correctness-review.md)
 - [Implementation and verification postmortem](docs/workflows/postmortem.md)

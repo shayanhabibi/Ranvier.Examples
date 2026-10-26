@@ -1,0 +1,6 @@
+{
+  "FreeShippingThreshold": 5000,
+  "DomesticShipping": 900,
+  "InternationalShipping": 2400,
+  "Stock": 8
+}
