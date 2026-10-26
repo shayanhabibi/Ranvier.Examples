@@ -38,6 +38,8 @@ jobs:
           dotnet fsi build.fsx -- run-elmish-console
           dotnet run --no-build -c Release --project src/Ranvier.Examples.FSharp.Console -- intro
           dotnet run --no-build -c Release --project src/Ranvier.Examples.CSharp.Console -- intro
+      - name: Verify production shop capture and traced replay
+        run: python3 tools/verify-shop-replay.py
       - name: Verify dependency sources are unchanged
         run: |
           test -z "$(git -C external/Ranvier status --porcelain)"
